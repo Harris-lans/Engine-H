@@ -13,5 +13,48 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Source Files\EngineH">
+      <UniqueIdentifier>{04bb751a-7853-4901-9fa8-3f7399df3fc0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\EngineH\Public">
+      <UniqueIdentifier>{92e31521-fd60-49c4-af2b-338d3f52f3fe}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\EngineH\Private">
+      <UniqueIdentifier>{cb5e03a4-dd1f-4318-8083-200a66c22fef}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Game">
+      <UniqueIdentifier>{3ef14f4d-6a7b-4107-916f-710a95e8beaa}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Game\Public">
+      <UniqueIdentifier>{ffd276fe-4d8c-49d3-ac14-6e1f0423445b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Game\Private">
+      <UniqueIdentifier>{5e0a5c68-6f41-42e2-a353-c268588b948b}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Public\IEngine.h">
+      <Filter>Source Files\EngineH\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="Public\EngineH.h">
+      <Filter>Source Files\EngineH\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="Public\EngineInterface.h">
+      <Filter>Source Files\EngineH\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="Public\EngineTypes.h">
+      <Filter>Source Files\EngineH\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Game\Public\GameInterface.h">
+      <Filter>Source Files\Game\Private</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Private\EngineH.cpp">
+      <Filter>Source Files\EngineH\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Game\Private\Main.cpp">
+      <Filter>Source Files\Game\Public</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
