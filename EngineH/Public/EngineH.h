@@ -24,6 +24,15 @@ struct GraphicsContext
 	float mAngle;
 };
 
+enum class BUFFER_INDEX : GLuint
+{
+	BOX = 0,
+	LINE_BOX,
+	CIRCLE,
+	LINE_CIRCLE,
+	LINE
+};
+
 // Provide an interface to any engine
 class EngineH : public exEngineInterface
 {
@@ -57,6 +66,15 @@ public:
 
 
 private:
+	// Buffer Data for Different Shapes
+	const float SQUARE[8] = {
+		-1.0f,  1.0f,
+		-1.0f, -1.0f,
+		 1.0f,  1.0f,
+		 1.0f, -1.0f
+	};
+
+
 	// Class Functions
 	int Initialize();
 

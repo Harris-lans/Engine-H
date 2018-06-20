@@ -124,6 +124,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\Game\Public\Game.h" />
     <ClInclude Include="..\Game\Public\GameInterface.h" />
     <ClInclude Include="Public\EngineH.h" />
     <ClInclude Include="Public\EngineInterface.h" />
@@ -131,6 +132,7 @@
     <ClInclude Include="Public\IEngine.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\Game\Private\Game.cpp" />
     <ClCompile Include="..\Game\Private\Main.cpp" />
     <ClCompile Include="Private\EngineH.cpp" />
   </ItemGroup>

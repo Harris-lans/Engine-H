@@ -51,12 +51,6 @@ int EngineH::Initialize()
 	return 0;
 }
 
-const float SQUARE[] = {
-	-1.0f,  1.0f,
-	-1.0f, -1.0f,
-	1.0f,  1.0f,
-	1.0f, -1.0f
-};
 
 const float MS2SEC = (1/1000.0f);
 
@@ -99,27 +93,16 @@ void EngineH::OnFrame(float fDeltaT)
 	// Getting clear color from the game and clearing all existing renders
 	exColor clearColor;
 	mGame->GetClearColor(clearColor);
-
+	
+	// Normalizing Colors
 	exColorF clearColorF;
 	exColorF::ToColorF(clearColor, clearColorF);
 
 	glClearColor(clearColorF.mColor[0], clearColorF.mColor[1], clearColorF.mColor[2], 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
 
+	// Running the game
 	mGame->Run(fDeltaT);
-
-	// Rotation attributes for the Box
-	gc.mAngle += 1.0f * fDeltaT;
-	if (gc.mAngle > 2.0f * M_PI)
-		gc.mAngle -= 2.0f * M_PI;
-
-
-	glUseProgram(gc.mProgram);
-	glUniform1f(gc.mUniformAngle, gc.mAngle);
-	glBindVertexArray(gc.mVAOPoint);
-	glDrawArrays(GL_TRIANGLE_STRIP, 0, countof(SQUARE) / 2);
-	glBindVertexArray(0);
-	glUseProgram(0);
 
 	SDL_GL_SwapWindow(mWindow);
 }
@@ -145,20 +128,22 @@ void EngineH::ConsumeEvents()
 
 void EngineH::InitializeShaders()
 {
+	// Testing Depth
+	glEnable(GL_DEPTH_TEST);
+
 	const GLchar *vert_shader =
 		"#version 330\n"
 		"layout(location = 0) in vec2 point;\n"
-		"uniform float angle;\n"
+		"uniform mat4 model, view, proj;\n"
 		"void main() {\n"
-		"    mat2 rotate = mat2(cos(angle), -sin(angle),\n"
-		"                       sin(angle), cos(angle));\n"
-		"    gl_Position = vec4(0.75 * rotate * point, 0.0, 1.0);\n"
+		"    gl_Position = proj * view * model * vec4(point, 0.0, 1.0);\n"
 		"}\n";
 	const GLchar *frag_shader =
 		"#version 330\n"
-		"out vec4 color;\n"
+		"layout(location = 0) out vec4 color;\n"
+		"uniform vec3 in_color;\n"
 		"void main() {\n"
-		"    color = vec4(1.0, 0.15, 0.15, 0);\n"
+		"    color = vec4(in_color, 0);\n"
 		"}\n";
 
 	// compile and link OpenGL program
@@ -171,18 +156,25 @@ void EngineH::InitializeShaders()
 	glDeleteShader(frag);
 	glDeleteShader(vert);
 
-	// prepare vertex buffer object (VBO)
+	// Prepare vertex buffer object (VBO)
+	// =================================
+	// Generating 1 Buffer and storing it's context
 	glGenBuffers(1, &gc.mVBOPoint);
 	glBindBuffer(GL_ARRAY_BUFFER, gc.mVBOPoint);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(SQUARE), SQUARE, GL_STATIC_DRAW);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	// Resetting OpenGL's selected Buffer, so that this is not the buffer being used when something is drawn (Good Practices)
+	glBindBuffer(GL_ARRAY_BUFFER, 0);							 
 
-	// prepare vertex array object (VAO)
+	// Prepare vertex array object (VAO)
+	// =================================
+	// Generating 1 Vertex Array and storing it's context
 	glGenVertexArrays(1, &gc.mVAOPoint);
 	glBindVertexArray(gc.mVAOPoint);
+	// Linking the Vertex Array to a Array Buffer
 	glBindBuffer(GL_ARRAY_BUFFER, gc.mVAOPoint);
 	glVertexAttribPointer(ATTRIB_POINT, 2, GL_FLOAT, GL_FALSE, 0, 0);
 	glEnableVertexAttribArray(ATTRIB_POINT);
+	// Resetting OpenGL's selected Buffer and Vertex Array, so that this is not the buffer or vertex array being used when something is drawn (Good Practices)
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
 }
@@ -237,6 +229,44 @@ void EngineH::GL_IgnoreError()
 
 void EngineH::DrawBox(const exVector2& v2P1, const exVector2& v2P2, const exColor& color, int nLayer)
 {
+	// The three matrices we need
+	exMatrix4 orthographicProjection;
+	exMatrix4 model;
+	exMatrix4 view;
+
+	// Projection matrix
+	exMatrix4::exOrthographicProjectionMatrix(&orthographicProjection, 800.0f, 600.0f, -100.0f, 100.0f);
+
+	// View matrix (really just an identity matrix, maybe optimize this call?)
+	exMatrix4::exMakeTranslationMatrix(&view, exVector2(0.0f, 0.0f));
+
+	// Positions of the uniforms
+	int view_mat_location;
+	int proj_mat_location;
+	int model_mat_location;
+
+	glUseProgram(gc.mProgram);
+
+	exColorF colorf;
+	exColorF::ToColorF(color, colorf);
+	glUniform3fv(gc.mUniformAngle, 1, &colorf.mColor[0]);
+
+	// Position of the object
+	exMatrix4::exMakeTranslationMatrix(&model, v2P1);
+	// This is the "layer", cast from int to float
+	model.m43 = (float)nLayer;
+
+	view_mat_location = glGetUniformLocation(gc.mProgram, "view");
+	glUniformMatrix4fv(view_mat_location, 1, GL_FALSE, view.ToFloatPtr());
+	proj_mat_location = glGetUniformLocation(gc.mProgram, "proj");
+	glUniformMatrix4fv(proj_mat_location, 1, GL_FALSE, orthographicProjection.ToFloatPtr());
+	model_mat_location = glGetUniformLocation(gc.mProgram, "model");
+	glUniformMatrix4fv(model_mat_location, 1, GL_FALSE, model.ToFloatPtr());
+
+	glBindVertexArray(gc.mVAOPoint);
+	glDrawArrays(GL_TRIANGLE_STRIP, 0, countof(SQUARE) / 2);
+	glBindVertexArray(0);
+	glUseProgram(0);
 
 }
 
