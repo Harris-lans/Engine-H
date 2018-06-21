@@ -69,23 +69,14 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <OutDir>$(ProjectDir)Build</OutDir>
-    <IntDir>$(ProjectDir)Out</IntDir>
-  </PropertyGroup>
+  <PropertyGroup />
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)Dependencies\glew-1.10.0\include\GL;$(SolutionDir)Dependencies\SDL\SDL2-2.0.3\include;$(SolutionDir)EngineH\Public;$(SolutionDir)Game\Public;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
-    <Link>
-      <AdditionalLibraryDirectories>$(SolutionDir)Dependencies\glew-1.10.0\lib\Release\Win32;$(SolutionDir)Dependencies\SDL\SDL2-2.0.3\lib\x86;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>opengl32.lib;glew32.lib;SDL2.lib;SDL2main.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <SubSystem>Windows</SubSystem>
-    </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -124,19 +115,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\Game\Public\Game.h" />
-    <ClInclude Include="..\Game\Public\GameInterface.h" />
-    <ClInclude Include="Public\EngineH.h" />
-    <ClInclude Include="Public\EngineInterface.h" />
-    <ClInclude Include="Public\EngineTypes.h" />
-    <ClInclude Include="Public\IEngine.h" />
-    <ClInclude Include="Public\Output.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="..\Game\Private\Game.cpp" />
-    <ClCompile Include="..\Game\Private\Main.cpp" />
-    <ClCompile Include="Private\EngineH.cpp" />
-    <ClCompile Include="Private\Output.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
