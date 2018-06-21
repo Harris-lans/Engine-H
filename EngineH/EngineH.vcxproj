@@ -130,11 +130,13 @@
     <ClInclude Include="Public\EngineInterface.h" />
     <ClInclude Include="Public\EngineTypes.h" />
     <ClInclude Include="Public\IEngine.h" />
+    <ClInclude Include="Public\Output.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\Game\Private\Game.cpp" />
     <ClCompile Include="..\Game\Private\Main.cpp" />
     <ClCompile Include="Private\EngineH.cpp" />
+    <ClCompile Include="Private\Output.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

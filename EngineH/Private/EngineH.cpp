@@ -1,6 +1,7 @@
 #include "EngineH.h"
 #include "SDL.h"
 #include "GLEW.h"
+#include "Output.h"
 
 GraphicsContext EngineH::gc;
 
@@ -128,6 +129,15 @@ void EngineH::ConsumeEvents()
 
 void EngineH::InitializeShaders()
 {
+	InitializeSquareShaders();
+	InitializeCircleShaders();
+
+	// Printing the number of errors detected in the OpenGL code
+	Console::LogOpenGL(glGetError());
+}
+
+void EngineH::InitializeSquareShaders()
+{
 	// Testing Depth
 	glEnable(GL_DEPTH_TEST);
 
@@ -150,33 +160,54 @@ void EngineH::InitializeShaders()
 	GLuint vert = CompileShader(GL_VERTEX_SHADER, vert_shader);
 	GLuint frag = CompileShader(GL_FRAGMENT_SHADER, frag_shader);
 
-	gc.mProgram = LinkProgram(vert, frag);
-	gc.mUniformAngle = glGetUniformLocation(gc.mProgram, "angle");
+	// Storing the compiled shader of the circle in the graphics context
+	gc.mBoxShaderProgram = LinkProgram(vert, frag);
+
+	glDeleteShader(frag);
+	glDeleteShader(vert);
+}
+
+void EngineH::InitializeCircleShaders()
+{
+	// For drawing a circle we are first drawing a square and then removing all pixels outside the distance(radius) from the center
+
+	// Testing Depth
+	glEnable(GL_DEPTH_TEST);
+
+	const GLchar *vert_shader =
+		"#version 330\n"
+		"layout(location = 0) in vec2 point;\n"
+		"layout(location = 1) in vec2 tex;\n"
+		"uniform mat4 model, view, proj;\n"
+		"out vec2 CircleTexCoords;"
+		"void main() {\n"
+		"     gl_Position = proj * view * model * vec4(point, 0.0, 1.0);\n"
+		"     CircleTexCoords = tex;"
+		"}\n";
+	const GLchar *frag_shader =
+		"#version 330\n"
+		"layout(location = 0) out vec4 color;\n"
+		"uniform vec3 in_color;\n"
+		"in vec2 CircleTexCoords;\n"
+		"void main() {\n"
+		"float d = distance(CircleTexCoords, vec2(0.0, 0.0));\n"
+		"if (d > 1.0)\n"
+		"{\n"
+		"discard;\n"
+		"}\n"
+		"color = vec4(in_color, 1.0);\n"
+		"}\n";
+
+	// compile and link OpenGL program
+	GLuint vert = CompileShader(GL_VERTEX_SHADER, vert_shader);
+	GLuint frag = CompileShader(GL_FRAGMENT_SHADER, frag_shader);
+
+	// Storing the compiled shader of the circle in the graphics context
+	gc.mCircleShaderProgram = LinkProgram(vert, frag);
 
 	glDeleteShader(frag);
 	glDeleteShader(vert);
 
-	// Prepare vertex buffer object (VBO)
-	// =================================
-	// Generating 1 Buffer and storing it's context
-	glGenBuffers(1, &gc.mVBOPoint);
-	glBindBuffer(GL_ARRAY_BUFFER, gc.mVBOPoint);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(SQUARE), SQUARE, GL_STATIC_DRAW);
-	// Resetting OpenGL's selected Buffer, so that this is not the buffer being used when something is drawn (Good Practices)
-	glBindBuffer(GL_ARRAY_BUFFER, 0);							 
-
-	// Prepare vertex array object (VAO)
-	// =================================
-	// Generating 1 Vertex Array and storing it's context
-	glGenVertexArrays(1, &gc.mVAOPoint);
-	glBindVertexArray(gc.mVAOPoint);
-	// Linking the Vertex Array to a Array Buffer
-	glBindBuffer(GL_ARRAY_BUFFER, gc.mVAOPoint);
-	glVertexAttribPointer(ATTRIB_POINT, 2, GL_FLOAT, GL_FALSE, 0, 0);
-	glEnableVertexAttribArray(ATTRIB_POINT);
-	// Resetting OpenGL's selected Buffer and Vertex Array, so that this is not the buffer or vertex array being used when something is drawn (Good Practices)
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindVertexArray(0);
 }
 
 GLuint EngineH::CompileShader(GLenum eShaderType, const GLchar * pSource)
@@ -229,45 +260,42 @@ void EngineH::GL_IgnoreError()
 
 void EngineH::DrawBox(const exVector2& v2P1, const exVector2& v2P2, const exColor& color, int nLayer)
 {
-	// The three matrices we need
-	exMatrix4 orthographicProjection;
-	exMatrix4 model;
-	exMatrix4 view;
+	float width = (v2P2.x - v2P1.x) / 2;
+	float height = (v2P2.y - v2P1.y) / 2;
 
-	// Projection matrix
-	exMatrix4::exOrthographicProjectionMatrix(&orthographicProjection, 800.0f, 600.0f, -100.0f, 100.0f);
+	// Generating the coordinates for the box depending on the given two points
+	float SQUARE[8] = {
+		-width,  height,
+		-width, -height,
+		 width,  height,
+		 width, -height
+	};
 
-	// View matrix (really just an identity matrix, maybe optimize this call?)
-	exMatrix4::exMakeTranslationMatrix(&view, exVector2(0.0f, 0.0f));
+	// Preparing the vertex Buffer to draw a square
 
-	// Positions of the uniforms
-	int view_mat_location;
-	int proj_mat_location;
-	int model_mat_location;
+	// Prepare vertex buffer object (VBO)
+	// =================================
+	// Generating 1 Buffer and storing it's context
+	glGenBuffers(1, &gc.mVBOPoint);
+	glBindBuffer(GL_ARRAY_BUFFER, gc.mVBOPoint);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(SQUARE), SQUARE, GL_STATIC_DRAW);
+	// Resetting OpenGL's selected Buffer, so that this is not the buffer being used when something is drawn (Good Practices)
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-	glUseProgram(gc.mProgram);
-
-	exColorF colorf;
-	exColorF::ToColorF(color, colorf);
-	glUniform3fv(gc.mUniformAngle, 1, &colorf.mColor[0]);
-
-	// Position of the object
-	exMatrix4::exMakeTranslationMatrix(&model, v2P1);
-	// This is the "layer", cast from int to float
-	model.m43 = (float)nLayer;
-
-	view_mat_location = glGetUniformLocation(gc.mProgram, "view");
-	glUniformMatrix4fv(view_mat_location, 1, GL_FALSE, view.ToFloatPtr());
-	proj_mat_location = glGetUniformLocation(gc.mProgram, "proj");
-	glUniformMatrix4fv(proj_mat_location, 1, GL_FALSE, orthographicProjection.ToFloatPtr());
-	model_mat_location = glGetUniformLocation(gc.mProgram, "model");
-	glUniformMatrix4fv(model_mat_location, 1, GL_FALSE, model.ToFloatPtr());
-
+	// Prepare vertex array object (VAO)
+	// =================================
+	// Generating 1 Vertex Array and storing it's context
+	glGenVertexArrays(1, &gc.mVAOPoint);
 	glBindVertexArray(gc.mVAOPoint);
-	glDrawArrays(GL_TRIANGLE_STRIP, 0, countof(SQUARE) / 2);
+	// Linking the Vertex Array to a Array Buffer
+	glBindBuffer(GL_ARRAY_BUFFER, gc.mVAOPoint);
+	glVertexAttribPointer(ATTRIB_POINT, 2, GL_FLOAT, GL_FALSE, 0, 0);
+	glEnableVertexAttribArray(ATTRIB_POINT);
+	// Resetting OpenGL's selected Buffer and Vertex Array, so that this is not the buffer or vertex array being used when something is drawn (Good Practices)
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
-	glUseProgram(0);
-
+	
+	DrawUsingShaderProgram(gc.mBoxShaderProgram, color, nLayer, countof(SQUARE)/2);
 }
 
 void EngineH::DrawLine(const exVector2& v2P1, const exVector2& v2P2, const exColor& color, int nLayer)
@@ -283,7 +311,39 @@ void EngineH::DrawLineBox(const exVector2& v2P1, const exVector2& v2P2, const ex
 
 void EngineH::DrawCircle(const exVector2& v2Center, float fRadius, const exColor& color, int nLayer)
 {
+	// Generating the coordinates for the circle depending on the given two points
+	float CIRCLE[16] = {
+		-fRadius,  fRadius, -1.0f,  1.0f,
+		-fRadius, -fRadius, -1.0f, -1.0f,
+		 fRadius,  fRadius,  1.0f,  1.0f,
+		 fRadius, -fRadius,  1.0f, -1.0f
+	};
 
+	// Preparing the vertex Buffer to draw a circle
+
+	// Prepare vertex buffer object (VBO)
+	// =================================
+	// Generating 1 Buffer and storing it's context
+	glGenBuffers(1, &gc.mVBOPoint);
+	glBindBuffer(GL_ARRAY_BUFFER, gc.mVBOPoint);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(CIRCLE), CIRCLE, GL_STATIC_DRAW);
+	// Resetting OpenGL's selected Buffer, so that this is not the buffer being used when something is drawn (Good Practices)
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+	// Prepare vertex array object (VAO)
+	// =================================
+	// Generating 1 Vertex Array and storing it's context
+	glGenVertexArrays(1, &gc.mVAOPoint);
+	glBindVertexArray(gc.mVAOPoint);
+	// Linking the Vertex Array to a Array Buffer
+	glBindBuffer(GL_ARRAY_BUFFER, gc.mVAOPoint);
+	glVertexAttribPointer(ATTRIB_POINT, 2, GL_FLOAT, GL_FALSE, 0, 0);
+	glEnableVertexAttribArray(ATTRIB_POINT);
+	// Resetting OpenGL's selected Buffer and Vertex Array, so that this is not the buffer or vertex array being used when something is drawn (Good Practices)
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindVertexArray(0);
+
+	DrawUsingShaderProgram(gc.mCircleShaderProgram, color, nLayer, countof(CIRCLE)/2);
 }
 
 void EngineH::DrawLineCircle(const exVector2& v2Center, float fRadius, const exColor& color, int nLayer)
@@ -300,3 +360,48 @@ void EngineH::DrawText(int nFontID, const exVector2& v2Position, const char* szT
 {
 
 }
+
+void EngineH::DrawUsingShaderProgram(GLuint shaderProgram, const exColor& color, int nLayer, int numberOfVertices)
+{
+	// The three matrices we need
+	exMatrix4 orthographicProjection;
+	exMatrix4 model;
+	exMatrix4 view;
+
+	// Projection matrix
+	exMatrix4::exOrthographicProjectionMatrix(&orthographicProjection, 800.0f, 600.0f, -100.0f, 100.0f);
+
+	// View matrix (really just an identity matrix, maybe optimize this call?)
+	exMatrix4::exMakeTranslationMatrix(&view, exVector2(0.0f, 0.0f));
+
+	// Positions of the uniforms
+	int view_mat_location;
+	int proj_mat_location;
+	int model_mat_location;
+
+	glUseProgram(shaderProgram);
+
+	exColorF colorf;
+	exColorF::ToColorF(color, colorf);
+	int in_color_vec3_location;
+	in_color_vec3_location = glGetUniformLocation(shaderProgram, "in_color");
+	glUniform3fv(in_color_vec3_location, 1, &colorf.mColor[0]);
+
+	// Position of the object
+	exMatrix4::exMakeTranslationMatrix(&model, exVector2(50.0f, 50.0f));
+	// This is the "layer", cast from int to float
+	model.m43 = (float)nLayer;
+
+	view_mat_location = glGetUniformLocation(shaderProgram, "view");
+	glUniformMatrix4fv(view_mat_location, 1, GL_FALSE, view.ToFloatPtr());
+	proj_mat_location = glGetUniformLocation(shaderProgram, "proj");
+	glUniformMatrix4fv(proj_mat_location, 1, GL_FALSE, orthographicProjection.ToFloatPtr());
+	model_mat_location = glGetUniformLocation(shaderProgram, "model");
+	glUniformMatrix4fv(model_mat_location, 1, GL_FALSE, model.ToFloatPtr());
+
+	glBindVertexArray(gc.mVAOPoint);
+	glDrawArrays(GL_TRIANGLE_STRIP, 0, numberOfVertices);
+	glBindVertexArray(0);
+	glUseProgram(0);
+}
+

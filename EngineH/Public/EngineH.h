@@ -17,7 +17,8 @@ typedef unsigned int GLenum;
 
 struct GraphicsContext
 {
-	GLuint mProgram;
+	GLuint mBoxShaderProgram;
+	GLuint mCircleShaderProgram;
 	GLint mUniformAngle;
 	GLuint mVBOPoint;
 	GLuint mVAOPoint;
@@ -64,17 +65,9 @@ public:
 	// draw text with a given loaded font
 	virtual void				DrawText(int nFontID, const exVector2& v2Position, const char* szText, const exColor& color, int nLayer);
 
+	virtual void				DrawUsingShaderProgram(GLuint shaderProgram, const exColor& color, int nLayer, int numberOfVertices);
 
 private:
-	// Buffer Data for Different Shapes
-	const float SQUARE[8] = {
-		-1.0f,  1.0f,
-		-1.0f, -1.0f,
-		 1.0f,  1.0f,
-		 1.0f, -1.0f
-	};
-
-
 	// Class Functions
 	int Initialize();
 
@@ -83,6 +76,10 @@ private:
 	void ConsumeEvents();
 
 	void InitializeShaders();
+
+	void InitializeSquareShaders();
+
+	void InitializeCircleShaders();
 
 	static GLuint CompileShader( GLenum eShaderType, const GLchar* pSource );
 
