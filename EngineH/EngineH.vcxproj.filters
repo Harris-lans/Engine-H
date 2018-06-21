@@ -51,6 +51,9 @@
     <ClInclude Include="..\Game\Public\Game.h">
       <Filter>Source Files\Game\Public</Filter>
     </ClInclude>
+    <ClInclude Include="Public\Output.h">
+      <Filter>Source Files\EngineH\Public</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Private\EngineH.cpp">
@@ -61,6 +64,9 @@
     </ClCompile>
     <ClCompile Include="..\Game\Private\Game.cpp">
       <Filter>Source Files\Game\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="Private\Output.cpp">
+      <Filter>Source Files\EngineH\Private</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
