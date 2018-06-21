@@ -44,7 +44,7 @@ void exGame::OnEventsConsumed()
 
 void exGame::Run(float fDeltaT)
 {
-	mEngine->DrawBox(mBoxVertex1, mBoxVertex2, mBoxColor, 1);
+	//mEngine->DrawBox(mBoxVertex1, mBoxVertex2, mBoxColor, 1);
 	
 	// Drawing a circle
 	mBoxColor.SetColor(0, 255, 0);

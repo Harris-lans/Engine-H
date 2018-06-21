@@ -153,7 +153,7 @@ void EngineH::InitializeSquareShaders()
 		"layout(location = 0) out vec4 color;\n"
 		"uniform vec3 in_color;\n"
 		"void main() {\n"
-		"    color = vec4(in_color, 0);\n"
+		"    color = vec4(in_color, 1.0);\n"
 		"}\n";
 
 	// compile and link OpenGL program
@@ -195,7 +195,7 @@ void EngineH::InitializeCircleShaders()
 		"{\n"
 		"discard;\n"
 		"}\n"
-		"color = vec4(in_color, 1.0);\n"
+		"color = vec4(1.0, 0.0, 0.0, 1.0);\n"
 		"}\n";
 
 	// compile and link OpenGL program
@@ -205,8 +205,8 @@ void EngineH::InitializeCircleShaders()
 	// Storing the compiled shader of the circle in the graphics context
 	gc.mCircleShaderProgram = LinkProgram(vert, frag);
 
-	glDeleteShader(frag);
 	glDeleteShader(vert);
+	glDeleteShader(frag);
 
 }
 
@@ -219,7 +219,7 @@ GLuint EngineH::CompileShader(GLenum eShaderType, const GLchar * pSource)
 	GLint param;
 	glGetShaderiv(shader, GL_COMPILE_STATUS, &param);
 
-	if (!param)
+	if (param == GL_FALSE) 
 	{
 		GLchar log[4096];
 		glGetShaderInfoLog(shader, sizeof(log), NULL, log);
@@ -237,6 +237,7 @@ GLuint EngineH::LinkProgram(GLuint gluVertexShader, GLuint gluFragmentShader)
 	glAttachShader(program, gluVertexShader);
 	glAttachShader(program, gluFragmentShader);
 	glLinkProgram(program);
+	glValidateProgram(program);
 
 	GLint param;
 	glGetProgramiv(program, GL_LINK_STATUS, &param);
@@ -271,26 +272,29 @@ void EngineH::DrawBox(const exVector2& v2P1, const exVector2& v2P2, const exColo
 		 width, -height
 	};
 
-	// Preparing the vertex Buffer to draw a square
-
 	// Prepare vertex buffer object (VBO)
 	// =================================
+	
 	// Generating 1 Buffer and storing it's context
 	glGenBuffers(1, &gc.mVBOPoint);
 	glBindBuffer(GL_ARRAY_BUFFER, gc.mVBOPoint);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(SQUARE), SQUARE, GL_STATIC_DRAW);
+	
 	// Resetting OpenGL's selected Buffer, so that this is not the buffer being used when something is drawn (Good Practices)
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-	// Prepare vertex array object (VAO)
+	// Prepare vertex array object (VAO) and Defining the layout of our buffer 
 	// =================================
+	
 	// Generating 1 Vertex Array and storing it's context
 	glGenVertexArrays(1, &gc.mVAOPoint);
 	glBindVertexArray(gc.mVAOPoint);
+	
 	// Linking the Vertex Array to a Array Buffer
 	glBindBuffer(GL_ARRAY_BUFFER, gc.mVAOPoint);
-	glVertexAttribPointer(ATTRIB_POINT, 2, GL_FLOAT, GL_FALSE, 0, 0);
-	glEnableVertexAttribArray(ATTRIB_POINT);
+	glEnableVertexAttribArray(ATTRIB_POINT_1);
+	glVertexAttribPointer(ATTRIB_POINT_1, 2, GL_FLOAT, GL_FALSE, sizeof(float)/2 , 0);
+	
 	// Resetting OpenGL's selected Buffer and Vertex Array, so that this is not the buffer or vertex array being used when something is drawn (Good Practices)
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
@@ -324,8 +328,8 @@ void EngineH::DrawCircle(const exVector2& v2Center, float fRadius, const exColor
 	// Prepare vertex buffer object (VBO)
 	// =================================
 	// Generating 1 Buffer and storing it's context
-	glGenBuffers(1, &gc.mVBOPoint);
-	glBindBuffer(GL_ARRAY_BUFFER, gc.mVBOPoint);
+	glGenBuffers(1, &gc.mVBOPoint_Circle);
+	glBindBuffer(GL_ARRAY_BUFFER, gc.mVBOPoint_Circle);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(CIRCLE), CIRCLE, GL_STATIC_DRAW);
 	// Resetting OpenGL's selected Buffer, so that this is not the buffer being used when something is drawn (Good Practices)
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -333,13 +337,13 @@ void EngineH::DrawCircle(const exVector2& v2Center, float fRadius, const exColor
 	// Prepare vertex array object (VAO)
 	// =================================
 	// Generating 1 Vertex Array and storing it's context
-	glGenVertexArrays(1, &gc.mVAOPoint);
-	glBindVertexArray(gc.mVAOPoint);
-	// Linking the Vertex Array to a Array Buffer
-	glBindBuffer(GL_ARRAY_BUFFER, gc.mVAOPoint);
-	glVertexAttribPointer(ATTRIB_POINT, 2, GL_FLOAT, GL_FALSE, 0, 0);
-	glEnableVertexAttribArray(ATTRIB_POINT);
-	// Resetting OpenGL's selected Buffer and Vertex Array, so that this is not the buffer or vertex array being used when something is drawn (Good Practices)
+	glGenVertexArrays(1, &gc.mVAOPoint_Circle);
+	glBindVertexArray(gc.mVAOPoint_Circle);
+	glBindBuffer(GL_ARRAY_BUFFER, gc.mVAOPoint_Circle);
+	glVertexAttribPointer(ATTRIB_POINT_1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), 0);
+	glEnableVertexAttribArray(ATTRIB_POINT_1);
+	glVertexAttribPointer(ATTRIB_POINT_2, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
+	glEnableVertexAttribArray(ATTRIB_POINT_2);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
 
@@ -361,7 +365,7 @@ void EngineH::DrawText(int nFontID, const exVector2& v2Position, const char* szT
 
 }
 
-void EngineH::DrawUsingShaderProgram(GLuint shaderProgram, const exColor& color, int nLayer, int numberOfVertices)
+void EngineH::DrawUsingShaderProgram(GLuint shaderProgram, exVector2& position, const exColor& color, int nLayer, int numberOfVertices)
 {
 	// The three matrices we need
 	exMatrix4 orthographicProjection;
@@ -388,7 +392,8 @@ void EngineH::DrawUsingShaderProgram(GLuint shaderProgram, const exColor& color,
 	glUniform3fv(in_color_vec3_location, 1, &colorf.mColor[0]);
 
 	// Position of the object
-	exMatrix4::exMakeTranslationMatrix(&model, exVector2(50.0f, 50.0f));
+	exMatrix4::exMakeTranslationMatrix(&model, position);
+	
 	// This is the "layer", cast from int to float
 	model.m43 = (float)nLayer;
 
@@ -400,8 +405,11 @@ void EngineH::DrawUsingShaderProgram(GLuint shaderProgram, const exColor& color,
 	glUniformMatrix4fv(model_mat_location, 1, GL_FALSE, model.ToFloatPtr());
 
 	glBindVertexArray(gc.mVAOPoint);
+	
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, numberOfVertices);
+	
 	glBindVertexArray(0);
+	
 	glUseProgram(0);
 }
 
