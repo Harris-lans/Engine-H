@@ -68,7 +68,7 @@ public:
 	// draw text with a given loaded font
 	virtual void				DrawText(int nFontID, const exVector2& v2Position, const char* szText, const exColor& color, int nLayer);
 
-	virtual void				DrawUsingShaderProgram(GLuint shaderProgram, exVector2& position, const exColor& color, int nLayer, int numberOfVertices);
+	virtual void				DrawUsingShaderProgram(GLuint shaderProgram, GLuint vertexArrayObject, const exVector2& position, const exColor& color, int nLayer, int numberOfVertices);
 
 private:
 	// Class Functions

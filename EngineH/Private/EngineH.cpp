@@ -100,7 +100,7 @@ void EngineH::OnFrame(float fDeltaT)
 	exColorF::ToColorF(clearColor, clearColorF);
 
 	glClearColor(clearColorF.mColor[0], clearColorF.mColor[1], clearColorF.mColor[2], 1.0f);
-	glClear(GL_COLOR_BUFFER_BIT);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	// Running the game
 	mGame->Run(fDeltaT);
@@ -156,7 +156,7 @@ void EngineH::InitializeSquareShaders()
 		"    color = vec4(in_color, 1.0);\n"
 		"}\n";
 
-	// compile and link OpenGL program
+	// Compile and link OpenGL program
 	GLuint vert = CompileShader(GL_VERTEX_SHADER, vert_shader);
 	GLuint frag = CompileShader(GL_FRAGMENT_SHADER, frag_shader);
 
@@ -195,10 +195,10 @@ void EngineH::InitializeCircleShaders()
 		"{\n"
 		"discard;\n"
 		"}\n"
-		"color = vec4(1.0, 0.0, 0.0, 1.0);\n"
+		"color = vec4(in_color, 1.0);\n"
 		"}\n";
 
-	// compile and link OpenGL program
+	// Compile and link OpenGL program
 	GLuint vert = CompileShader(GL_VERTEX_SHADER, vert_shader);
 	GLuint frag = CompileShader(GL_FRAGMENT_SHADER, frag_shader);
 
@@ -274,32 +274,27 @@ void EngineH::DrawBox(const exVector2& v2P1, const exVector2& v2P2, const exColo
 
 	// Prepare vertex buffer object (VBO)
 	// =================================
-	
 	// Generating 1 Buffer and storing it's context
 	glGenBuffers(1, &gc.mVBOPoint);
 	glBindBuffer(GL_ARRAY_BUFFER, gc.mVBOPoint);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(SQUARE), SQUARE, GL_STATIC_DRAW);
-	
 	// Resetting OpenGL's selected Buffer, so that this is not the buffer being used when something is drawn (Good Practices)
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 	// Prepare vertex array object (VAO) and Defining the layout of our buffer 
 	// =================================
-	
 	// Generating 1 Vertex Array and storing it's context
 	glGenVertexArrays(1, &gc.mVAOPoint);
 	glBindVertexArray(gc.mVAOPoint);
-	
 	// Linking the Vertex Array to a Array Buffer
 	glBindBuffer(GL_ARRAY_BUFFER, gc.mVAOPoint);
 	glEnableVertexAttribArray(ATTRIB_POINT_1);
-	glVertexAttribPointer(ATTRIB_POINT_1, 2, GL_FLOAT, GL_FALSE, sizeof(float)/2 , 0);
-	
+	glVertexAttribPointer(ATTRIB_POINT_1, 2, GL_FLOAT, GL_FALSE, 0, 0);
 	// Resetting OpenGL's selected Buffer and Vertex Array, so that this is not the buffer or vertex array being used when something is drawn (Good Practices)
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
 	
-	DrawUsingShaderProgram(gc.mBoxShaderProgram, color, nLayer, countof(SQUARE)/2);
+	DrawUsingShaderProgram(gc.mBoxShaderProgram, gc.mVAOPoint, v2P1, color, nLayer, countof(SQUARE)/2);
 }
 
 void EngineH::DrawLine(const exVector2& v2P1, const exVector2& v2P2, const exColor& color, int nLayer)
@@ -347,7 +342,8 @@ void EngineH::DrawCircle(const exVector2& v2Center, float fRadius, const exColor
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
 
-	DrawUsingShaderProgram(gc.mCircleShaderProgram, color, nLayer, countof(CIRCLE)/2);
+	// Passing the Shader Program to use and the Vertex Buffer to offer for the 
+	DrawUsingShaderProgram(gc.mCircleShaderProgram, gc.mVAOPoint_Circle, v2Center, color, nLayer, countof(CIRCLE)/2);
 }
 
 void EngineH::DrawLineCircle(const exVector2& v2Center, float fRadius, const exColor& color, int nLayer)
@@ -365,7 +361,7 @@ void EngineH::DrawText(int nFontID, const exVector2& v2Position, const char* szT
 
 }
 
-void EngineH::DrawUsingShaderProgram(GLuint shaderProgram, exVector2& position, const exColor& color, int nLayer, int numberOfVertices)
+void EngineH::DrawUsingShaderProgram(GLuint shaderProgram, GLuint vertexArrayObject, const exVector2& position, const exColor& color, int nLayer, int numberOfVertices)
 {
 	// The three matrices we need
 	exMatrix4 orthographicProjection;
@@ -404,7 +400,7 @@ void EngineH::DrawUsingShaderProgram(GLuint shaderProgram, exVector2& position, 
 	model_mat_location = glGetUniformLocation(shaderProgram, "model");
 	glUniformMatrix4fv(model_mat_location, 1, GL_FALSE, model.ToFloatPtr());
 
-	glBindVertexArray(gc.mVAOPoint);
+	glBindVertexArray(vertexArrayObject);
 	
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, numberOfVertices);
 	
