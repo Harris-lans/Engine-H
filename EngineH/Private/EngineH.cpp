@@ -263,6 +263,7 @@ void EngineH::DrawBox(const exVector2& v2P1, const exVector2& v2P2, const exColo
 {
 	float width = (v2P2.x - v2P1.x) / 2;
 	float height = (v2P2.y - v2P1.y) / 2;
+	exVector2 centroid = { width , height };
 
 	// Generating the coordinates for the box depending on the given two points
 	float SQUARE[8] = {
@@ -294,7 +295,7 @@ void EngineH::DrawBox(const exVector2& v2P1, const exVector2& v2P2, const exColo
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
 	
-	DrawUsingShaderProgram(gc.mBoxShaderProgram, gc.mVAOPoint, v2P1, color, nLayer, countof(SQUARE)/2);
+	DrawUsingShaderProgram(gc.mBoxShaderProgram, gc.mVAOPoint, centroid, color, nLayer, countof(SQUARE)/2);
 }
 
 void EngineH::DrawLine(const exVector2& v2P1, const exVector2& v2P2, const exColor& color, int nLayer)

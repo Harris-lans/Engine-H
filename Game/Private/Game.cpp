@@ -16,7 +16,7 @@ void exGame::Initialize(exEngineInterface* pEngine)
 
 	mBoxColor.SetColor(255, 0, 0);
 	mBoxVertex1 = {0, 0};
-	mBoxVertex2 = {(float)kViewportWidth, (float)kViewportHeight};
+	mBoxVertex2 = {(kViewportWidth / 2), (kViewportHeight / 2)};
 }
 
 const char* exGame::GetWindowName() const
