@@ -190,12 +190,12 @@ void EngineH::InitializeCircleShaders()
 		"uniform vec3 in_color;\n"
 		"in vec2 CircleTexCoords;\n"
 		"void main() {\n"
-		"float d = distance(CircleTexCoords, vec2(0.0, 0.0));\n"
-		"if (d > 1.0)\n"
-		"{\n"
-		"discard;\n"
-		"}\n"
-		"color = vec4(in_color, 1.0);\n"
+		"	float d = distance(CircleTexCoords, vec2(0.0, 0.0));\n"
+		"	if (d > 1.0)\n"
+		"	{\n"
+		"		discard;\n"
+		"	}\n"
+		"	color = vec4(in_color, 1.0);\n"
 		"}\n";
 
 	// Compile and link OpenGL program
@@ -263,7 +263,7 @@ void EngineH::DrawBox(const exVector2& v2P1, const exVector2& v2P2, const exColo
 {
 	float width = (v2P2.x - v2P1.x) / 2;
 	float height = (v2P2.y - v2P1.y) / 2;
-	exVector2 centroid = { width , height };
+	exVector2 centroid = { width + v2P1.x , height + v2P1.y };
 
 	// Generating the coordinates for the box depending on the given two points
 	float SQUARE[8] = {
@@ -283,14 +283,14 @@ void EngineH::DrawBox(const exVector2& v2P1, const exVector2& v2P2, const exColo
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 	// Prepare vertex array object (VAO) and Defining the layout of our buffer 
-	// =================================
+	// =====================================================================
 	// Generating 1 Vertex Array and storing it's context
 	glGenVertexArrays(1, &gc.mVAOPoint);
 	glBindVertexArray(gc.mVAOPoint);
-	// Linking the Vertex Array to a Array Buffer
-	glBindBuffer(GL_ARRAY_BUFFER, gc.mVAOPoint);
-	glEnableVertexAttribArray(ATTRIB_POINT_1);
+	// Binding the Array Buffer
+	glBindBuffer(GL_ARRAY_BUFFER, gc.mVBOPoint);
 	glVertexAttribPointer(ATTRIB_POINT_1, 2, GL_FLOAT, GL_FALSE, 0, 0);
+	glEnableVertexAttribArray(ATTRIB_POINT_1);
 	// Resetting OpenGL's selected Buffer and Vertex Array, so that this is not the buffer or vertex array being used when something is drawn (Good Practices)
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
@@ -335,7 +335,7 @@ void EngineH::DrawCircle(const exVector2& v2Center, float fRadius, const exColor
 	// Generating 1 Vertex Array and storing it's context
 	glGenVertexArrays(1, &gc.mVAOPoint_Circle);
 	glBindVertexArray(gc.mVAOPoint_Circle);
-	glBindBuffer(GL_ARRAY_BUFFER, gc.mVAOPoint_Circle);
+	glBindBuffer(GL_ARRAY_BUFFER, gc.mVBOPoint_Circle);
 	glVertexAttribPointer(ATTRIB_POINT_1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), 0);
 	glEnableVertexAttribArray(ATTRIB_POINT_1);
 	glVertexAttribPointer(ATTRIB_POINT_2, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
@@ -372,7 +372,7 @@ void EngineH::DrawUsingShaderProgram(GLuint shaderProgram, GLuint vertexArrayObj
 	// Projection matrix
 	exMatrix4::exOrthographicProjectionMatrix(&orthographicProjection, 800.0f, 600.0f, -100.0f, 100.0f);
 
-	// View matrix (really just an identity matrix, maybe optimize this call?)
+	// View matrix
 	exMatrix4::exMakeTranslationMatrix(&view, exVector2(0.0f, 0.0f));
 
 	// Positions of the uniforms
