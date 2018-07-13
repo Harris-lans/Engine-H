@@ -162,6 +162,10 @@ void EngineH::InitializeSquareShaders()
 
 	// Storing the compiled shader of the circle in the graphics context
 	gc.mBoxShaderProgram = LinkProgram(vert, frag);
+	// Generating 1 Buffer and storing it's context
+	glGenBuffers(1, &gc.mVBOPoint);
+	// Generating 1 Vertex Array and storing it's context
+	glGenVertexArrays(1, &gc.mVAOPoint);
 
 	glDeleteShader(frag);
 	glDeleteShader(vert);
@@ -204,6 +208,8 @@ void EngineH::InitializeCircleShaders()
 
 	// Storing the compiled shader of the circle in the graphics context
 	gc.mCircleShaderProgram = LinkProgram(vert, frag);
+	glGenBuffers(1, &gc.mVBOPoint_Circle);
+	glGenVertexArrays(1, &gc.mVAOPoint_Circle);
 
 	glDeleteShader(vert);
 	glDeleteShader(frag);
@@ -275,8 +281,6 @@ void EngineH::DrawBox(const exVector2& v2P1, const exVector2& v2P2, const exColo
 
 	// Prepare vertex buffer object (VBO)
 	// =================================
-	// Generating 1 Buffer and storing it's context
-	glGenBuffers(1, &gc.mVBOPoint);
 	glBindBuffer(GL_ARRAY_BUFFER, gc.mVBOPoint);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(SQUARE), SQUARE, GL_STATIC_DRAW);
 	// Resetting OpenGL's selected Buffer, so that this is not the buffer being used when something is drawn (Good Practices)
@@ -284,8 +288,6 @@ void EngineH::DrawBox(const exVector2& v2P1, const exVector2& v2P2, const exColo
 
 	// Prepare vertex array object (VAO) and Defining the layout of our buffer 
 	// =====================================================================
-	// Generating 1 Vertex Array and storing it's context
-	glGenVertexArrays(1, &gc.mVAOPoint);
 	glBindVertexArray(gc.mVAOPoint);
 	// Binding the Array Buffer
 	glBindBuffer(GL_ARRAY_BUFFER, gc.mVBOPoint);
@@ -324,7 +326,6 @@ void EngineH::DrawCircle(const exVector2& v2Center, float fRadius, const exColor
 	// Prepare vertex buffer object (VBO)
 	// =================================
 	// Generating 1 Buffer and storing it's context
-	glGenBuffers(1, &gc.mVBOPoint_Circle);
 	glBindBuffer(GL_ARRAY_BUFFER, gc.mVBOPoint_Circle);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(CIRCLE), CIRCLE, GL_STATIC_DRAW);
 	// Resetting OpenGL's selected Buffer, so that this is not the buffer being used when something is drawn (Good Practices)
@@ -333,7 +334,6 @@ void EngineH::DrawCircle(const exVector2& v2Center, float fRadius, const exColor
 	// Prepare vertex array object (VAO)
 	// =================================
 	// Generating 1 Vertex Array and storing it's context
-	glGenVertexArrays(1, &gc.mVAOPoint_Circle);
 	glBindVertexArray(gc.mVAOPoint_Circle);
 	glBindBuffer(GL_ARRAY_BUFFER, gc.mVBOPoint_Circle);
 	glVertexAttribPointer(ATTRIB_POINT_1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), 0);
