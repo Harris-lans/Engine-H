@@ -15,8 +15,8 @@ void exGame::Initialize(exEngineInterface* pEngine)
 	mEngine = pEngine;
 
 	mBoxColor.SetColor(255, 0, 0);
-	mBoxVertex1 = {400, 300};
-	mBoxVertex2 = {450, 350};
+	mBoxVertex1 = {150, 0};
+	mBoxVertex2 = {kViewportWidth / 2 , kViewportHeight / 2};
 }
 
 const char* exGame::GetWindowName() const
@@ -47,7 +47,6 @@ void exGame::Run(float fDeltaT)
 	mEngine->DrawBox(mBoxVertex1, mBoxVertex2, mBoxColor, 1);
 	
 	// Drawing a circle
-	mBoxColor.SetColor(0, 255, 0);
-	mEngine->DrawCircle(mBoxVertex1, 10.0f, mBoxColor, 2);
+	//mEngine->DrawCircle(mBoxVertex1, 40.0f, mBoxColor, 2);
 }
 

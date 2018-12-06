@@ -12,7 +12,8 @@ typedef char GLchar;
 typedef unsigned int GLuint;
 typedef unsigned int GLenum;
 
-#define ATTRIB_POINT 0
+#define ATTRIB_POINT_1 0
+#define ATTRIB_POINT_2 1
 #define countof(x) (sizeof(x) / sizeof(0[x]))
 
 struct GraphicsContext
@@ -22,6 +23,8 @@ struct GraphicsContext
 	GLint mUniformAngle;
 	GLuint mVBOPoint;
 	GLuint mVAOPoint;
+	GLuint mVBOPoint_Circle;
+	GLuint mVAOPoint_Circle;
 	float mAngle;
 };
 
@@ -65,7 +68,7 @@ public:
 	// draw text with a given loaded font
 	virtual void				DrawText(int nFontID, const exVector2& v2Position, const char* szText, const exColor& color, int nLayer);
 
-	virtual void				DrawUsingShaderProgram(GLuint shaderProgram, const exColor& color, int nLayer, int numberOfVertices);
+	virtual void				DrawUsingShaderProgram(GLuint shaderProgram, GLuint vertexArrayObject, const exVector2& position, const exColor& color, int nLayer, int numberOfVertices);
 
 private:
 	// Class Functions
